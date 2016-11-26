@@ -43,6 +43,57 @@ var Mine = {
         }
         else{
             var iCount = 0;
+            var oNeighbours = {
+                "1" : { //Top-Left
+                    "sPos":"TL",
+                    "iX":(x-1),
+                    "iY":(y-1),
+                    "bExists" :((x-1)>=1)&&((y-1)>=1)? true : false
+                },
+                "2" : { //Top
+                    "sPos":"T",
+                    "iX":x,
+                    "iY":(y-1),
+                    "bExists" :(y-1)>=1? true : false
+                },
+                "3" : { //Top-Right
+                    "sPos":"TR",
+                    "iX":x+1,
+                    "iY":y-1,
+                    "bExists" :((x+1)<=this.iSize)&&(y-1)>=1? true : false
+                },
+                "4" : { //Left
+                    "sPos":"L",
+                    "iX":(x-1),
+                    "iY":y,
+                    "bExists" :(x-1)>=1? true : false
+                },
+                "5" : { //Right
+                    "sPos":"R",
+                    "iX":(x+1),
+                    "iY":y,
+                    "bExists" :((x+1)<=this.iSize)? true : false
+                },
+                "6" : { //Bottom-Left
+                    "sPos":"BL",
+                    "iX":(x-1),
+                    "iY":(y+1),
+                    "bExists" :((x-1)>=1)&&(y+1)<=this.iSize? true : false
+                },
+                "7" : { //Bottom
+                    "sPos":"B",
+                    "iX":x,
+                    "iY":(y+1),
+                    "bExists" :(y+1)<=this.iSize? true : false
+                },
+                "8" : { //Bottom-Right
+                    "sPos":"BR",
+                    "iX":(x+1),
+                    "iY":(y+1),
+                    "bExists" :((x+1)<=this.iSize)&&(y+1)<=this.iSize? true : false
+                }
+            };
+            /*
             var bTopLeft = ((x-1)>=1)&&(y-1)>=1 ? this.oMineMap[(x-1)][(y-1)] : false;
                 bTop = (y-1)>=1  ? this.oMineMap[x][(y-1)] : false;
                 bTopRight = ((x+1)<=this.iSize)&&(y-1)>=1 ? this.oMineMap[(x+1)][(y-1)] : false;
@@ -59,6 +110,14 @@ var Mine = {
             if(bBottomLeft){ iCount++; }
             if(bBottom){ iCount++; }
             if(bBottomRight){ iCount++; }
+            */
+            for(var i=1; i<=8; i++){
+                if(oNeighbours[i].bExists){
+                    if(this.oMineMap[oNeighbours[i].iX][oNeighbours[i].iY]){
+                        iCount++;
+                    }
+                }
+            }
             oDebug.log("Grid Calculated with weight "+iCount,"success");
             return iCount;
         }
@@ -72,8 +131,11 @@ var Mine = {
            if(res>=3){ sClass="hig"; }
            else if(res==2){ sClass="med"; }
            else{ sClass="low"; }
-           $(scope).empty().append("<p class='"+sClass+"' >"+res+"</p>");
+           $(scope).empty().append("<p class='"+sClass+" openGrid' >"+res+"</p>");
 
+        }
+        else if(res==0){
+            $(scope).empty().append("<p class='depress openGrid'></p>");
         }
         oDebug.log("Selection at x:"+iXPos+" & y:"+iYPos,"warning");
     },
