@@ -1,0 +1,90 @@
+$colorSuccess : lawngreen;
+$colorWarning : #d89011;
+$colorError :  #b90404;
+$colorEmphasis : deepskyblue;
+
+.mine-grid{
+    border-collapse: collapse;
+    border-spacing: 0px;
+    background-color:#efefef;
+
+    th,td{
+        padding: 5px;
+        border: 2px solid #b5b5b5;
+        font-family: Verdana, Arial, Helvetica, sans-serif;
+        width:50px;
+        height:50px;
+        cursor: pointer;
+    }
+    img{
+        margin-left:7px;
+        &.explosion{
+            -webkit-transition: width 2s; /* Safari 3.1 to 6.0 */
+            transition: width 2s;
+        }
+    }
+    p{
+        text-align:center;
+        width:100%;
+        font-size:28px;
+        font-weight:800;
+
+        &.low{
+            color:$colorEmphasis
+        }
+        &.med{
+            color:$colorSuccess
+        }
+        &.hig{
+            color:$colorWarning;
+        }
+        &.crit{
+            color:$colorError
+        }
+    }
+    .depress{
+        background-color:#d0d0d0;
+        border-radius:5px;
+        width:100%;
+        height:100%
+    }
+    .openGrid{
+        cursor:default;
+    }
+}
+
+.console{
+    border:5px solid black;
+    border-radius:5px;
+    margin-top:5px;
+    padding:5px;
+    height:200px;
+    background-color:#414142;
+    color:#d6d6d6;
+    overflow-y:scroll;
+    font-family: "Lucida Console", Courier, monospace;
+    font-size:12px;
+
+    p{
+        &.error{
+            color:$colorError;
+        }
+        &.warning{
+            color:$colorWarning;
+        }   
+        &.success{
+            color:$colorSuccess;
+        }
+    }
+
+}
+.header{ 
+    p{
+        font-family: cursive;
+        font-size:20px;
+        font-weight:700;
+    }
+}
+
+
+

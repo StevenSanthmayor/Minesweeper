@@ -19,7 +19,7 @@ var Mine = {
             for(var j=1; j<=this.iSize; j++){
                 this.oMineMap[j] = this.oMineMap[j] ?  this.oMineMap[j] : {};
                 this.oMineMap[j][i] = this._generateRandom(sDifficulty)=="1" ? true : false;
-                sRow += "<td data-pos-x='"+j+"' data-pos-y='"+i+"' >"+
+                sRow += "<td id='gridCell"+j+""+i+"' data-pos-x='"+j+"' data-pos-y='"+i+"' >"+
                         (this.oMineMap[j][i]? "<img width='32px' src='img/mine.png' />" : "")+
                         "</td>";
             }
@@ -28,22 +28,15 @@ var Mine = {
         }
         //Attach Click Handler
         this.jGridCells =$(this.jMine.find("td"));
-        this.jGridCells.on("click",function(){that._onGridClick(this)});
+        this.jGridCells.on("click",function(){
+            var iX = parseInt($(this).attr("data-pos-x"),10),
+                iY = parseInt($(this).attr("data-pos-y"),10);
+            that._onGridClick(iX,iY);
+        });
         oDebug.log("Grid Created","success");
     },
-    getGridWeight : function(x,y){ //Need to improvise code, very crude logic
-        /*
-        * TL   T   TR
-        * L   x,y  R
-        * BL   B   BR
-        */
-        if(this.oMineMap[x][y]){
-            oDebug.log("Mine Hit !!","error");
-            return -1;
-        }
-        else{
-            var iCount = 0;
-            var oNeighbours = {
+    _getNeighbourCells : function(x,y){
+        return {
                 "1" : { //Top-Left
                     "sPos":"TL",
                     "iX":(x-1),
@@ -93,51 +86,109 @@ var Mine = {
                     "bExists" :((x+1)<=this.iSize)&&(y+1)<=this.iSize? true : false
                 }
             };
-            /*
-            var bTopLeft = ((x-1)>=1)&&(y-1)>=1 ? this.oMineMap[(x-1)][(y-1)] : false;
-                bTop = (y-1)>=1  ? this.oMineMap[x][(y-1)] : false;
-                bTopRight = ((x+1)<=this.iSize)&&(y-1)>=1 ? this.oMineMap[(x+1)][(y-1)] : false;
-                bLeft  = ((x-1)>=1) ? this.oMineMap[x-1][y] : false;
-                bRight  = ((x+1)<=this.iSize) ? this.oMineMap[(x+1)][y] : false;
-                bBottomLeft = ((x-1)>=1)&&(y+1)<=this.iSize ? this.oMineMap[(x-1)][(y+1)] : false;
-                bBottom = (y+1)<=this.iSize ? this.oMineMap[x][(y+1)] : false;
-                bBottomRight= ((x+1)<=this.iSize)&&(y+1)<=this.iSize ? this.oMineMap[(x+1)][(y+1)] : false;
-            if(bTopLeft){ iCount++; }
-            if(bTop){ iCount++; }
-            if(bTopRight){ iCount++; }
-            if(bLeft){ iCount++; }
-            if(bRight){ iCount++; }
-            if(bBottomLeft){ iCount++; }
-            if(bBottom){ iCount++; }
-            if(bBottomRight){ iCount++; }
-            */
+    },
+    getGridWeight : function(x,y){ //Need to improvise code, very crude logic
+        /*
+        * TL   T   TR
+        * L   x,y  R
+        * BL   B   BR
+        */
+        var oCells = this._getNeighbourCells(x,y);
+        if(this.oMineMap[x][y]){
+            oDebug.log("Mine Hit !!","error");
+            return -1;
+        }
+        else{
+            var iCount = 0;
             for(var i=1; i<=8; i++){
-                if(oNeighbours[i].bExists){
-                    if(this.oMineMap[oNeighbours[i].iX][oNeighbours[i].iY]){
+                if(oCells[i].bExists){
+                    if(this.oMineMap[oCells[i].iX][oCells[i].iY]){
                         iCount++;
                     }
                 }
-            }
+            } 
+            if(iCount==0){
+                this._expandSelection(x,y);
+            }   
             oDebug.log("Grid Calculated with weight "+iCount,"success");
             return iCount;
         }
     },
-    _onGridClick : function(scope){
-        var iXPos = parseInt($(scope).attr("data-pos-x"),10),
-            iYPos = parseInt($(scope).attr("data-pos-y"),10);
+    _expandSelection : function(x,y){
+        //Get all valid Neighbours, then tag them ?
+        var oCells = this._getNeighbourCells(x,y);
+            oValidatedCells = {};
+
+        if(this.oMineMap[x][y]){ //Check for mine
+            //Mine hit, do not go further
+            return -1;
+        }
+        else{
+            var iCount = 0;
+            for(var i=1; i<=8; i++){ 
+                if(oCells[i].bExists){
+                    if(this.oMineMap[oCells[i].iX][oCells[i].iY]){
+                        iCount++;
+                    }
+                }
+            }
+            //Expand neighbour cells, if empty(Chained reaction)
+            if(iCount==0){
+            $("#gridCell"+x+""+y).empty().addClass("openGrid").append("<p class='depress'></p>");
+               for(var i=1; i<=8; i++){
+                    if(oCells[i].bExists){
+                        var iX = oCells[i].iX,
+                            iY = oCells[i].iY;
+                        if(!this.oMineMap[oCells[i].iX][oCells[i].iY]){
+                            if(!$("#gridCell"+iX+iY).hasClass("openGrid")){
+                                oDebug.log("Grid "+iX+","+iY+" empty");
+                                this._expandSelection(iX,iY); //----> Need to Optimize
+                            }           
+                        }
+                    }
+                } 
+            }
+        }           
+    },
+    _onGridClick : function(iXPos,iYPos){
         var res = this.getGridWeight(iXPos, iYPos),
             sClass = "";
         if(res>0){
-           if(res>=3){ sClass="hig"; }
+           if(res>=4){ sClass="crit"; }
+           else if(res>=3){ sClass="hig"; }
            else if(res==2){ sClass="med"; }
            else{ sClass="low"; }
-           $(scope).empty().append("<p class='"+sClass+" openGrid' >"+res+"</p>");
+           $("#gridCell"+iXPos+""+iYPos).empty().addClass("openGrid").append("<p class='"+sClass+"' >"+res+"</p>");
 
         }
         else if(res==0){
-            $(scope).empty().append("<p class='depress openGrid'></p>");
+            $("#gridCell"+iXPos+""+iYPos).empty().addClass("openGrid").append("<p class='depress'></p>");
+        }
+        else if(res==-1){
+            this._explode();
         }
         oDebug.log("Selection at x:"+iXPos+" & y:"+iYPos,"warning");
+    },
+    _explode : function(){
+        var aMineLoc = [];
+            i = 0;
+        for(var y=1; y<=this.iSize; y++){
+            for(var x=1; x<=this.iSize; x++){
+                if(this.oMineMap[x][y]){
+                   aMineLoc.push("#gridCell"+x+""+y); 
+                }
+            }    
+        }
+        
+        var aIntr= setInterval(function(){
+            if(i<aMineLoc.length){
+                $(aMineLoc[i]).empty().append("<img class='explosion' width='32px' src='img/explosion.png' />");
+            }
+            else{
+                clearInterval(aIntr);
+            }
+            i++
+        },300);
     },
     _generateRandom : function(sDifficulty){
         var sLevel = sDifficulty ? sDifficulty : "easy";
@@ -181,9 +232,7 @@ var oDebug = {
     clear : function(){
         this.jMine.empty();
     }
-
 }
-
 
 //Startup
 $(document).ready(function(){
