@@ -7,7 +7,12 @@
     </head>
     <body>
         <div class="header">
-            <p>Minesweeper</p>
+            <p class="title">Minesweeper</p>
+            <div class='btn-group'>
+                <input type="button" class="btn" value="New Game">
+                <input type="button" class="btn" value="Clear">
+                <p>Flags placed: <b id="flagCount">0</b></p>
+            </div>    
         </div>    
         <table id="idMineField" class="mine-grid">
             <tbody></tbody>

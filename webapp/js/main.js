@@ -1,11 +1,13 @@
 var iSize = 8,
-    sDifficulty = "easy";
+    sDifficulty = "easy",
+    sGridCellId = "gridCell";
 
 
 var Mine = {
     init : function(){
         this.jMine = $("#idMineField tbody");
         this.oMineMap = {};
+        this.iFlagCount = 0;
 
         oDebug.log("Mine initialized");
     },
@@ -19,7 +21,7 @@ var Mine = {
             for(var j=1; j<=this.iSize; j++){
                 this.oMineMap[j] = this.oMineMap[j] ?  this.oMineMap[j] : {};
                 this.oMineMap[j][i] = this._generateRandom(sDifficulty)=="1" ? true : false;
-                sRow += "<td id='gridCell"+j+""+i+"' data-pos-x='"+j+"' data-pos-y='"+i+"' >"+
+                sRow += "<td id='"+sGridCellId+j+""+i+"' data-pos-x='"+j+"' data-pos-y='"+i+"' >"+
                         (this.oMineMap[j][i]? "<img width='32px' src='img/mine.png' />" : "")+
                         "</td>";
             }
@@ -32,6 +34,12 @@ var Mine = {
             var iX = parseInt($(this).attr("data-pos-x"),10),
                 iY = parseInt($(this).attr("data-pos-y"),10);
             that._onGridClick(iX,iY);
+        });
+        this.jGridCells.contextmenu(function(e) {
+            e.preventDefault();
+            var iX = parseInt($(this).attr("data-pos-x"),10),
+                iY = parseInt($(this).attr("data-pos-y"),10);
+            that._onFlagMount(iX,iY);
         });
         oDebug.log("Grid Created","success");
     },
@@ -134,13 +142,13 @@ var Mine = {
             }
             //Expand neighbour cells, if empty(Chained reaction)
             if(iCount==0){
-            $("#gridCell"+x+""+y).empty().addClass("openGrid").append("<p class='depress'></p>");
+            $("#"+sGridCellId+x+""+y).empty().addClass("openGrid").append("<p class='depress'></p>");
                for(var i=1; i<=8; i++){
                     if(oCells[i].bExists){
                         var iX = oCells[i].iX,
                             iY = oCells[i].iY;
                         if(!this.oMineMap[oCells[i].iX][oCells[i].iY]){
-                            if(!$("#gridCell"+iX+iY).hasClass("openGrid")){
+                            if(!$("#"+sGridCellId+iX+iY).hasClass("openGrid")){
                                 oDebug.log("Grid "+iX+","+iY+" empty");
                                 this._expandSelection(iX,iY); //----> Need to Optimize
                             }           
@@ -158,16 +166,27 @@ var Mine = {
            else if(res>=3){ sClass="hig"; }
            else if(res==2){ sClass="med"; }
            else{ sClass="low"; }
-           $("#gridCell"+iXPos+""+iYPos).empty().addClass("openGrid").append("<p class='"+sClass+"' >"+res+"</p>");
+           $("#"+sGridCellId+iXPos+""+iYPos).empty().addClass("openGrid").append("<p class='"+sClass+"' >"+res+"</p>");
 
         }
         else if(res==0){
-            $("#gridCell"+iXPos+""+iYPos).empty().addClass("openGrid").append("<p class='depress'></p>");
+            $("#"+sGridCellId+iXPos+""+iYPos).empty().addClass("openGrid").append("<p class='depress'></p>");
         }
         else if(res==-1){
             this._explode();
         }
         oDebug.log("Selection at x:"+iXPos+" & y:"+iYPos,"warning");
+    },
+    _onFlagMount : function(iXPos,iYPos){
+        var jGridCell = $("#"+sGridCellId+iXPos+""+iYPos); 
+        if(jGridCell.hasClass("flag") || jGridCell.hasClass("openGrid")){
+            jGridCell.empty().removeClass("flag");
+        }
+        else{
+            jGridCell.empty().addClass("flag").append("<img width='32px' src='img/flag.png' />");
+        }
+        this.iFlagCount = $(".flag").length;
+        $("#flagCount").html(this.iFlagCount);
     },
     _explode : function(){
         var aMineLoc = [];
@@ -175,20 +194,24 @@ var Mine = {
         for(var y=1; y<=this.iSize; y++){
             for(var x=1; x<=this.iSize; x++){
                 if(this.oMineMap[x][y]){
-                   aMineLoc.push("#gridCell"+x+""+y); 
+                   aMineLoc.push("#"+sGridCellId+x+""+y); 
                 }
             }    
         }
         
         var aIntr= setInterval(function(){
             if(i<aMineLoc.length){
-                $(aMineLoc[i]).empty().append("<img class='explosion' width='32px' src='img/explosion.png' />");
+                $(aMineLoc[i]).empty().append("<img class='explosion' width='2px' src='img/explosion.png' />");
+                $(aMineLoc[i]+" img").animate({"width":"32px"});
             }
             else{
                 clearInterval(aIntr);
             }
             i++
-        },300);
+        },100);
+        //Remove all event handlers
+        this.jGridCells.off("click");
+        this.jGridCells.off("contextmenu");
     },
     _generateRandom : function(sDifficulty){
         var sLevel = sDifficulty ? sDifficulty : "easy";
@@ -239,4 +262,7 @@ $(document).ready(function(){
     oDebug.init();
     Mine.init();
     Mine.createMineGrid(iSize,sDifficulty);
+});
+$().on("click",function(){
+
 });
