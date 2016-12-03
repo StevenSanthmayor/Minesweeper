@@ -16,14 +16,18 @@ var Mine = {
         var that = this,
             sRow ="";
         this.jMine.empty();
-        for(var i=1; i<=this.iSize; i++){
+        for(var y=1; y<=this.iSize; y++){
             sRow = "<tr>";
-            for(var j=1; j<=this.iSize; j++){
-                this.oMineMap[j] = this.oMineMap[j] ?  this.oMineMap[j] : {};
-                this.oMineMap[j][i] = this._generateRandom(sDifficulty)=="1" ? true : false;
-                sRow += "<td id='"+sGridCellId+j+""+i+"' data-pos-x='"+j+"' data-pos-y='"+i+"' >"+
-                        (this.oMineMap[j][i]? "<img width='32px' src='img/mine.png' />" : "")+
-                        "</td>";
+            for(var x=1; x<=this.iSize; x++){
+                this.oMineMap[x] = this.oMineMap[x] ?  this.oMineMap[x] : {};
+                this.oMineMap[x][y] = this._generateRandom(sDifficulty)=="1" ? true : false;
+                if(oDebug.bEnabled){
+                    sRow += "<td id='"+sGridCellId+x+""+y+"' data-pos-x='"+x+"' data-pos-y='"+y+"' >"+
+                            (this.oMineMap[x][y]? "<img width='32px' src='img/mine.png' />" : "")+
+                            "</td>";
+                }else{
+                    sRow += "<td id='"+sGridCellId+x+""+y+"' data-pos-x='"+x+"' data-pos-y='"+y+"' ></td>";
+                }        
             }
             sRow += "</tr>";
             this.jMine.append(sRow);
@@ -44,6 +48,11 @@ var Mine = {
         oDebug.log("Grid Created","success");
     },
     _getNeighbourCells : function(x,y){
+        /*
+        * TL   T   TR
+        * L   x,y  R
+        * BL   B   BR
+        */
         return {
                 "1" : { //Top-Left
                     "sPos":"TL",
@@ -95,12 +104,7 @@ var Mine = {
                 }
             };
     },
-    getGridWeight : function(x,y){ //Need to improvise code, very crude logic
-        /*
-        * TL   T   TR
-        * L   x,y  R
-        * BL   B   BR
-        */
+    getGridWeight : function(x,y){
         var oCells = this._getNeighbourCells(x,y);
         if(this.oMineMap[x][y]){
             oDebug.log("Mine Hit !!","error");
@@ -167,28 +171,59 @@ var Mine = {
            else if(res==2){ sClass="med"; }
            else{ sClass="low"; }
            $("#"+sGridCellId+iXPos+""+iYPos).empty().addClass("openGrid").append("<p class='"+sClass+"' >"+res+"</p>");
-
         }
         else if(res==0){
             $("#"+sGridCellId+iXPos+""+iYPos).empty().addClass("openGrid").append("<p class='depress'></p>");
         }
         else if(res==-1){
             this._explode();
+            return;
         }
         oDebug.log("Selection at x:"+iXPos+" & y:"+iYPos,"warning");
+        //Check if game completed ?
+        var bComplete = this._isComplete();
+        if(bComplete){
+             oDebug.log("Game Completed","success");
+             $("#completionModal .title").html("Congratulations");
+             $("#completionModal .message").html("You have completed the game successfully !!");
+             $("#completionModal").removeClass("hidden").addClass("visible");
+        }     
     },
     _onFlagMount : function(iXPos,iYPos){
         var jGridCell = $("#"+sGridCellId+iXPos+""+iYPos); 
         if(jGridCell.hasClass("flag") || jGridCell.hasClass("openGrid")){
             jGridCell.empty().removeClass("flag");
+            oDebug.log("Removed flag from positon x:"+iXPos+", y:"+iYPos);
         }
         else{
             jGridCell.empty().addClass("flag").append("<img width='32px' src='img/flag.png' />");
+            oDebug.log("Added flag at positon x:"+iXPos+", y:"+iYPos);
         }
         this.iFlagCount = $(".flag").length;
         $("#flagCount").html(this.iFlagCount);
     },
+    _isComplete : function(){
+        for(var y=1; y<=this.iSize; y++){
+            for(var x=1; x<=this.iSize; x++){
+                if(!($("#"+sGridCellId+x+""+y).hasClass("openGrid") || this.oMineMap[x][y])){
+                    return false;
+                }
+            }
+        }
+        //Show all Mines
+        for(var y=1; y<=this.iSize; y++){
+            for(var x=1; x<=this.iSize; x++){
+                if(this.oMineMap[x][y]){
+                    $("#"+sGridCellId+x+""+y).empty().append("<img width='32px' src='img/mine.png' />");
+                }
+            }
+        }
+        return true;
+    },
     _explode : function(){
+        $("#completionModal .title").html("Mine Hit- Game Over");
+        $("#completionModal .message").html("You seem to have hit a mine :(");
+        $("#completionModal").removeClass("hidden").addClass("visible");
         var aMineLoc = [];
             i = 0;
         for(var y=1; y<=this.iSize; y++){
@@ -246,23 +281,64 @@ var Mine = {
 var oDebug = {
     init : function(){
         this.jMine = $("#idDebugConsole");
+        this.bEnabled = true;
+        this.log("Debug Enabled, Mines will be visible");
     },
     log : function(sText, sType){ //sType - normal, error, warning, success
-        var slogType = sType ? sType : "normal";
-        this.jMine.append("<p class='"+slogType+"'>"+sText+"</p>");
-        this.jMine.scrollTop( this.jMine.prop('scrollHeight')); //Scroll to bottom
+        if(this.bEnabled){
+            var slogType = sType ? sType : "normal";
+            this.jMine.append("<p class='"+slogType+"'>"+sText+"</p>");
+            this.jMine.scrollTop( this.jMine.prop('scrollHeight')); //Scroll to bottom
+        }
     },
     clear : function(){
         this.jMine.empty();
+    },
+    show : function(bExp){
+        if(bExp){
+            this.bEnabled = true;
+            $("#idDebugConsole").css("display","block");
+        }
+        else{
+            this.bEnabled = false;
+            $("#idDebugConsole").css("display","none");
+        }    
     }
 }
 
-//Startup
+//On First Startup
 $(document).ready(function(){
     oDebug.init();
+    var bDebug = getUrlParameter('debug');  //index.html?debug=true
+    if(bDebug && bDebug=="true"){ oDebug.show(true); }
+    else{ oDebug.show(false); }
     Mine.init();
     Mine.createMineGrid(iSize,sDifficulty);
-});
-$().on("click",function(){
+
+    $("#newGameBtn").on("click",function(){
+        Mine.init();
+        Mine.createMineGrid(iSize,sDifficulty);
+    });
+    $(".close-modal").on("click",function(){
+        oDebug.log("Closing Modal");
+        var jModal = $(this).parent();
+        jModal.removeClass("visible").addClass("hidden");
+    });
 
 });
+
+//Ref: http://stackoverflow.com/questions/19491336/get-url-parameter-jquery-or-how-to-get-query-string-values-in-js
+var getUrlParameter = function getUrlParameter(sParam) {
+    var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+        sURLVariables = sPageURL.split('&'),
+        sParameterName,
+        i;
+
+    for (i = 0; i < sURLVariables.length; i++) {
+        sParameterName = sURLVariables[i].split('=');
+
+        if (sParameterName[0] === sParam) {
+            return sParameterName[1] === undefined ? true : sParameterName[1];
+        }
+    }
+};

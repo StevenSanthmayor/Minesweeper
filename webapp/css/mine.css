@@ -13,9 +13,9 @@
   .mine-grid img {
     margin-left: 7px; }
     .mine-grid img.explosion {
-      -webkit-transition: width 2s;
+      -webkit-transition: width 1s;
       /* Safari 3.1 to 6.0 */
-      transition: width 2s; }
+      transition: width 1s; }
   .mine-grid p {
     text-align: center;
     width: 100%;
@@ -62,3 +62,25 @@
 
 .header .btn-group {
   margin-bottom: 5px; }
+
+.modal-window {
+  border: 1px solid #989696;
+  border-radius: 5px;
+  padding: 10px;
+  position: absolute;
+  top: 300px;
+  width: 300px;
+  left: 150px;
+  opacity: 0.9;
+  background-color: #d6d6d6; }
+  .modal-window .title {
+    font-weight: 800;
+    border-width: 0px 0px 2px 0px;
+    border-style: solid; }
+
+/* General helper classes */
+.hidden {
+  display: none; }
+
+.visible {
+  display: block; }

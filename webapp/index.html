@@ -9,8 +9,8 @@
         <div class="header">
             <p class="title">Minesweeper</p>
             <div class='btn-group'>
-                <input type="button" class="btn" value="New Game">
-                <input type="button" class="btn" value="Clear">
+                <input type="button" id="newGameBtn" class="btn" value="New Game">
+                <input type="button" id="clearBtn" class="btn" value="Clear">
                 <p>Flags placed: <b id="flagCount">0</b></p>
             </div>    
         </div>    
@@ -19,5 +19,10 @@
         </table>
         <div id="idDebugConsole" class="console">
         </div>
+        <div id="completionModal" class="modal-window hidden">
+            <p class="title">Congratulations!!!!</p>
+            <p class="message">You have completed the game successfully !!</p>
+            <input type="button" class="close-modal" value="close" >
+        </div>    
     </body>
 </html>
