@@ -2,7 +2,6 @@ var iSize = 8,
     sDifficulty = "easy",
     sGridCellId = "gridCell";
 
-
 var Mine = {
     init : function(){
         this.jMine = $("#idMineField tbody");
@@ -301,4 +300,3 @@ var getUrlParameter = function getUrlParameter(sParam) {
         }
     }
 };
-
